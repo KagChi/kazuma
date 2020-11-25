@@ -71,6 +71,7 @@ class Music(commands.Cog):
 
             await ctx.send(f'Added {str(tracks[0])} to the queue.')
             await player.play(tracks[0])
+            queue_item = (tracks[0], ctx.guild.id)
             await songs.put(queue_item)
             
 
