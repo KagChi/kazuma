@@ -5,6 +5,10 @@ import os
 import asyncio
 from discord.ext import commands
 import datetime
+import asyncio
+
+songs = asyncio.Queue()
+play_next_song = asyncio.Event()
 class Music(commands.Cog):
 
     def __init__(self, bot):
