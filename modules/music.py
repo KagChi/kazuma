@@ -36,7 +36,7 @@ class Music(commands.Cog):
         while True:
             play_next_song.clear()
             song, guild_id = await songs.get()
-            player = client.wavelink.get_player(guild_id)
+            player = self.bot.wavelink.get_player(guild_id)
             await player.play(song)
             await play_next_song.wait()
 
