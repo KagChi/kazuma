@@ -25,12 +25,21 @@ class Music(commands.Cog):
 
         # Initiate our nodes. For this example we will use one server.
         # Region should be a discord.py guild.region e.g sydney or us_central (Though this is not technically required)
-        await self.bot.wavelink.initiate_node(host=f'{os.environ.get("host")}',
+       node = await self.bot.wavelink.initiate_node(host=f'{os.environ.get("host")}',
                                               port=8080,
                                               rest_uri=f'http://{os.environ.get("host")}:8080',
                                               password='youshallnotpass',
                                               identifier='Kanna',
                                               region='Indonesia')
+        node.set_hook(on_event_hook)
+
+    while True:
+        play_next_song.clear()
+        song, guild_id = await songs.get()
+        player = client.wavelink.get_player(guild_id)
+        await player.play(song)
+        await play_next_song.wait()
+
 
     @commands.command(name='connect')
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
