@@ -33,12 +33,12 @@ class Music(commands.Cog):
                                               region='Indonesia')
         node.set_hook(on_event_hook)
 
-    while True:
-        play_next_song.clear()
-        song, guild_id = await songs.get()
-        player = client.wavelink.get_player(guild_id)
-        await player.play(song)
-        await play_next_song.wait()
+        while True:
+            play_next_song.clear()
+            song, guild_id = await songs.get()
+            player = client.wavelink.get_player(guild_id)
+            await player.play(song)
+            await play_next_song.wait()
 
 
     @commands.command(name='connect')
