@@ -15,31 +15,18 @@ class Music(commands.Cog):
         if not hasattr(bot, 'wavelink'):
             self.bot.wavelink = wavelink.Client(bot=self.bot)
         self.bot.loop.create_task(self.start_nodes())
-        
-    async def on_event_hook(event): 
-    if isinstance(event, (wavelink.TrackEnd, wavelink.TrackException)): 
-    play_next_song.set() 
 
     async def start_nodes(self):
         await self.bot.wait_until_ready()
 
         # Initiate our nodes. For this example we will use one server.
         # Region should be a discord.py guild.region e.g sydney or us_central (Though this is not technically required)
-        node = await self.bot.wavelink.initiate_node(host=f'{os.environ.get("host")}',
+        await self.bot.wavelink.initiate_node(host=f'{os.environ.get("host")}',
                                               port=8080,
                                               rest_uri=f'http://{os.environ.get("host")}:8080',
                                               password='youshallnotpass',
                                               identifier='Kanna',
                                               region='Indonesia')
-                                              
-        node.set_hook(on_event_hook)
-        
-        while True: 
-        play_next_song.clear() 
-        song, guild_id = await songs.get() 
-        player = self.bot.wavelink.get_player(guild_id) 
-        await player.play(song) 
-        await play_next_song.wait() 
 
     @commands.command(name='connect')
     async def connect_(self, ctx, *, channel: discord.VoiceChannel=None):
@@ -65,11 +52,8 @@ class Music(commands.Cog):
           if not player.is_connected:
             await ctx.invoke(self.connect_)
 
-            await ctx.send(f'Added {str(tracks[0])} to the queue.') 
-            queue_item = (tracks[0], ctx.guild.id) 
-            await songs.put(queue_item)
-
-client.loop.create_task(audio_player_task()) 
+            await ctx.send(f'Added {str(tracks[0])} to the queue.')
+            await player.play(tracks[0])
 
     @commands.command(name="info")
     async def info(self, ctx):
