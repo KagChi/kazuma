@@ -31,7 +31,7 @@ class Music(commands.Cog):
                                               password='youshallnotpass',
                                               identifier='Kanna',
                                               region='Indonesia')
-       node.set_hook(on_event_hook)
+        node.set_hook(on_event_hook)
 
     while True:
         play_next_song.clear()
