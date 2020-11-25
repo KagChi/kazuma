@@ -15,6 +15,9 @@ class Music(commands.Cog):
         if not hasattr(bot, 'wavelink'):
             self.bot.wavelink = wavelink.Client(bot=self.bot)
         self.bot.loop.create_task(self.start_nodes())
+    async def on_event_hook(event):
+        if isinstance(event, (wavelink.TrackEnd, wavelink.TrackException)):
+        play_next_song.set()
 
     async def start_nodes(self):
         await self.bot.wait_until_ready()
