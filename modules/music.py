@@ -67,6 +67,8 @@ class Music(commands.Cog):
 
             await ctx.send(f'Added {str(tracks[0])} to the queue.')
             await player.play(tracks[0])
+            await songs.put(queue_item)
+            
 
     @commands.command(name="info")
     async def info(self, ctx):
