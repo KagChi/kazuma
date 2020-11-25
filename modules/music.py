@@ -25,7 +25,20 @@ class Music(commands.Cog):
     async def on_event_hook(self, event):
        if isinstance(event, (wavelink.TrackEnd, wavelink.TrackException)):
         play_next_song.set()
+        
+    def get_controller(self, value: Union[commands.Context, wavelink.Player]):
+        if isinstance(value, commands.Context):
+            gid = value.guild.id
+        else:
+            gid = value.guild_id
 
+        try:
+            controller = self.controllers[gid]
+        except KeyError:
+            controller = MusicController(self.bot, gid)
+            self.controllers[gid] = controller
+
+        return controller
     async def start_nodes(self):
         await self.bot.wait_until_ready()
 
