@@ -22,7 +22,7 @@ class Music(commands.Cog):
             self.bot.wavelink = wavelink.Client(bot=self.bot)
         self.bot.loop.create_task(self.start_nodes())
         
-    async def on_event_hook(event):
+    async def on_event_hook(self, event):
        if isinstance(event, (wavelink.TrackEnd, wavelink.TrackException)):
         play_next_song.set()
 
@@ -37,7 +37,7 @@ class Music(commands.Cog):
                                               password='youshallnotpass',
                                               identifier='Kanna',
                                               region='Indonesia')
-        node.set_hook(on_event_hook)
+        node.set_hook(self.on_event_hook)
 
         while True:
             play_next_song.clear()
