@@ -13,6 +13,8 @@ class Music(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.next = asyncio.Event()
+        self.queue = asyncio.Queue()
         songs = asyncio.Queue()
         play_next_song = asyncio.Event()
 
