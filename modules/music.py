@@ -83,11 +83,12 @@ class Music(commands.Cog):
           player = self.bot.wavelink.get_player(ctx.guild.id)
           if not player.is_connected:
             await ctx.invoke(self.connect_)
-
+            
+            controller = self.get_controller(ctx)
+            await controller.queue.put(track)
             await ctx.send(f'Added {str(tracks[0])} to the queue.')
             await player.play(tracks[0])
-            queue_item = (tracks[0], ctx.guild.id)
-            await songs.put(queue_item)
+            
             
 
     @commands.command(name="info")
