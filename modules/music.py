@@ -6,6 +6,7 @@ import asyncio
 from discord.ext import commands
 import datetime
 import asyncio
+from typing import Union
 
 songs = asyncio.Queue()
 play_next_song = asyncio.Event()
@@ -38,7 +39,7 @@ class MusicController:
 
             song = await self.queue.get()
             await player.play(song)
-            self.now_playing = await self.channel.send(f'Now playing: `{song}`')
+            self.now_playing = await self.bot.channel.send(f'Now playing: `{song}`')
 
             await self.next.wait()
 
@@ -46,6 +47,7 @@ class Music(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.controllers = {}
         self.next = asyncio.Event()
         self.queue = asyncio.Queue()
         songs = asyncio.Queue()
@@ -118,12 +120,19 @@ class Music(commands.Cog):
             await ctx.invoke(self.connect_)
             
             controller = self.get_controller(ctx)
-            await controller.queue.put(track)
+            await controller.queue.put(tracks[0])
             await ctx.send(f'Added {str(tracks[0])} to the queue.')
             await player.play(tracks[0])
-            
-            
+    @commands.command(name='skip')    
+    async def skip(self, ctx):
+        """Skip the currently playing song."""
+        player = self.bot.wavelink.get_player(ctx.guild.id)
 
+        if not player.is_playing:
+            return await ctx.send('I am not currently playing anything!', delete_after=15)
+
+            await ctx.send('Skipping the song!', delete_after=15)
+            await player.stop()
     @commands.command(name="info")
     async def info(self, ctx):
          """Retrieve various Node/Server/Player information."""
