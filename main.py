@@ -1,15 +1,18 @@
 import os
 from discord.ext import commands
 import B
+import discord
 
 
 class Bot(commands.Bot):
 
     def __init__(self):
-        super(Bot, self).__init__(command_prefix=['k,'])
+        super(Bot, self).__init__(command_prefix=['k,'], help_command=None, activity=discord.Activity(type=1, name="k,help for info!"))
 
     async def on_ready(self):
         print(f'Logged in as {self.user.name} | {self.user.id}')
+        
+        
         
 
 client = Bot()

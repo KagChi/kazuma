@@ -6,16 +6,18 @@ import asyncio
 from discord.ext import commands
 import datetime
 import asyncio
+import re
 from typing import Union
 
 songs = asyncio.Queue()
 play_next_song = asyncio.Event()
+RURL = re.compile('https?:\/\/(?:www\.)?.+')
 class MusicController:
 
     def __init__(self, bot, guild_id):
         self.bot = bot
         self.guild_id = guild_id
-        self.channel = None
+        self.channel = self
 
         self.next = asyncio.Event()
         self.queue = asyncio.Queue()
@@ -39,8 +41,7 @@ class MusicController:
 
             song = await self.queue.get()
             await player.play(song)
-            self.now_playing = await self.bot.channel.send(f'Now playing: `{song}`')
-
+            await self.channel.send("i")
             await self.next.wait()
 
 class Music(commands.Cog):
@@ -48,37 +49,14 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.controllers = {}
-        self.next = asyncio.Event()
-        self.queue = asyncio.Queue()
-        songs = asyncio.Queue()
-        play_next_song = asyncio.Event()
 
         if not hasattr(bot, 'wavelink'):
             self.bot.wavelink = wavelink.Client(bot=self.bot)
+
         self.bot.loop.create_task(self.start_nodes())
-        
-    async def on_event_hook(self, event):
-       if isinstance(event, (wavelink.TrackEnd, wavelink.TrackException)):
-        play_next_song.set()
-        
-    def get_controller(self, value: Union[commands.Context, wavelink.Player]):
-        if isinstance(value, commands.Context):
-            gid = value.guild.id
-        else:
-            gid = value.guild_id
 
-        try:
-            controller = self.controllers[gid]
-        except KeyError:
-            controller = MusicController(self.bot, gid)
-            self.controllers[gid] = controller
-
-        return controller
     async def start_nodes(self):
         await self.bot.wait_until_ready()
-
-        # Initiate our nodes. For this example we will use one server.
-        # Region should be a discord.py guild.region e.g sydney or us_central (Though this is not technically required)
         node = await self.bot.wavelink.initiate_node(host=f'{os.environ.get("host")}',
                                               port=8080,
                                               rest_uri=f'http://{os.environ.get("host")}:8080',
@@ -93,6 +71,27 @@ class Music(commands.Cog):
             player = self.bot.wavelink.get_player(guild_id)
             await player.play(song)
             await play_next_song.wait()
+        
+    async def on_event_hook(self, event):
+        """Node hook callback."""
+        if isinstance(event, (wavelink.TrackEnd, wavelink.TrackException)):
+            controller = self.get_controller(event.player)
+            controller.next.set()
+        
+    def get_controller(self, value: Union[commands.Context, wavelink.Player]):
+        if isinstance(value, commands.Context):
+            gid = value.guild.id
+        else:
+            gid = value.guild_id
+
+        try:
+            controller = self.controllers[gid]
+        except KeyError:
+            controller = MusicController(self.bot, gid)
+            self.controllers[gid] = controller
+
+        return controller
+       
 
 
     @commands.command(name='connect')
@@ -109,20 +108,26 @@ class Music(commands.Cog):
 
     @commands.command(name='play')
     async def play(self, ctx, *, query: str):
-          
-          tracks = await self.bot.wavelink.get_tracks(f'ytsearch:{query}')
+        """Search for and add a song to the Queue."""
+        if not RURL.match(query):
+            query = f'ytsearch:{query}'
 
-          if not tracks:
+        tracks = await self.bot.wavelink.get_tracks(f'{query}')
+
+        if not tracks:
             return await ctx.send('Could not find any songs with that query.')
 
-          player = self.bot.wavelink.get_player(ctx.guild.id)
-          if not player.is_connected:
+        player = self.bot.wavelink.get_player(ctx.guild.id)
+        if not player.is_connected:
             await ctx.invoke(self.connect_)
-            
-            controller = self.get_controller(ctx)
-            await controller.queue.put(tracks[0])
-            await ctx.send(f'Added {str(tracks[0])} to the queue.')
-            await player.play(tracks[0])
+
+        track = tracks[0]
+
+        controller = self.get_controller(ctx)
+        await controller.queue.put(track)
+        await ctx.send(f'Added {str(track)} to the queue.', delete_after=15)
+
+
     @commands.command(name='skip')    
     async def skip(self, ctx):
         """Skip the currently playing song."""
